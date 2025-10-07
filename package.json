@@ -1,0 +1,47 @@
+{
+  "name": "@cianfrani/lmstudio",
+  "version": "0.0.1",
+  "description": "LM Studio provider for the AI SDK",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "format": "biome format .",
+    "format:write": "biome format --write .",
+    "type-check": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "keywords": [
+    "ai",
+    "ai-sdk",
+    "lm-studio",
+    "llm",
+    "chat",
+    "embeddings"
+  ],
+  "author": "Mark Anthony Cianfrani",
+  "license": "MIT",
+  "dependencies": {
+    "@ai-sdk/openai-compatible": "^0.0.7",
+    "@ai-sdk/provider": "^1.0.2",
+    "@ai-sdk/provider-utils": "^2.0.4"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.8.0",
+    "@types/node": "^20.0.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.0.0",
+    "vitest": "^1.0.0"
+  },
+  "peerDependencies": {
+    "ai": "^4.0.0"
+  }
+}
