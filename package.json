@@ -1,6 +1,6 @@
 {
   "name": "@cianfrani/lmstudio",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "LM Studio provider for the AI SDK",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",

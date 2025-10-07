@@ -6,7 +6,7 @@ describe("createLMStudio", () => {
     const provider = createLMStudio()
     expect(provider).toBeDefined()
     expect(typeof provider).toBe("function")
-    expect(provider.chatModel).toBeDefined()
+    expect(provider.languageModel).toBeDefined()
     expect(provider.textEmbeddingModel).toBeDefined()
     expect(provider.imageModel).toBeDefined()
   })
@@ -15,7 +15,7 @@ describe("createLMStudio", () => {
     const provider = createLMStudio()
     const model = provider("qwen2.5-7b-instruct")
     expect(model).toBeDefined()
-    expect(model.provider).toBe("lmstudio.chat")
+    expect(model.provider).toBe("lmstudio")
     expect(model.modelId).toBe("qwen2.5-7b-instruct")
   })
 
@@ -25,7 +25,7 @@ describe("createLMStudio", () => {
       "text-embedding-nomic-embed-text-v1.5"
     )
     expect(model).toBeDefined()
-    expect(model.provider).toBe("lmstudio.embedding")
+    expect(model.provider).toBe("lmstudio")
     expect(model.modelId).toBe("text-embedding-nomic-embed-text-v1.5")
   })
 
