@@ -17,7 +17,9 @@
     "format:write": "biome format --write .",
     "type-check": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "prepublishOnly": "npm run build && npm run test",
+    "publish": "npm publish"
   },
   "keywords": [
     "ai",

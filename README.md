@@ -1,17 +1,17 @@
-# @ai-sdk/lm-studio
+# @cianfrani/lm-studio
 
 LM Studio provider for the [AI SDK](https://ai-sdk.dev).
 
 ## Installation
 
 ```bash
-npm install @ai-sdk/lm-studio
+npm install @cianfrani/lmstudio
 ```
 
 ## Usage
 
 ```typescript
-import { lmstudio } from '@ai-sdk/lm-studio';
+import { lmstudio } from '@cianfrani/lmstudio';
 import { generateText } from 'ai';
 
 const { text } = await generateText({
