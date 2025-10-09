@@ -2,7 +2,7 @@ import {
   OpenAICompatibleChatLanguageModel,
   OpenAICompatibleEmbeddingModel,
 } from "@ai-sdk/openai-compatible"
-import type { OpenAICompatibleChatConfig } from "@ai-sdk/openai-compatible/internal"
+import type { OpenAICompatibleChatSettings } from "@ai-sdk/openai-compatible"
 import { NoSuchModelError } from "@ai-sdk/provider"
 import type { FetchFunction } from "@ai-sdk/provider-utils"
 
@@ -50,6 +50,8 @@ export function createLMStudio(options: LMStudioProviderOptions = {}) {
     process.env.LMSTUDIO_API_BASE_URL ??
     "http://localhost:1234/v1"
 
+  const apiKey = options.apiKey ?? "lm-studio"
+
   const getHeaders = () => ({
     ...options.headers,
   })
@@ -69,16 +71,17 @@ export function createLMStudio(options: LMStudioProviderOptions = {}) {
     fetch: options.fetch,
     includeUsage: true,
     supportsStructuredOutputs: true,
-  } satisfies OpenAICompatibleChatConfig
+    errorStructure: "openai",
+  }
 
   const createModel = (modelId: LMStudioModelId) =>
-    new OpenAICompatibleChatLanguageModel(modelId, baseOptions)
+    new OpenAICompatibleChatLanguageModel(modelId, apiKey, baseOptions)
 
   const provider = (modelId: LMStudioModelId) => createModel(modelId)
   provider.languageModel = createModel
 
   provider.textEmbeddingModel = (modelId: LMStudioEmbeddingModelId) =>
-    new OpenAICompatibleEmbeddingModel(modelId, baseOptions)
+    new OpenAICompatibleEmbeddingModel(modelId, apiKey, baseOptions)
 
   provider.imageModel = (modelId: string) => {
     throw new NoSuchModelError({ modelId, modelType: "imageModel" })
