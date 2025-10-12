@@ -1,10 +1,15 @@
 import {
   OpenAICompatibleChatLanguageModel,
   OpenAICompatibleEmbeddingModel,
+  OpenAICompatibleImageModel,
 } from "@ai-sdk/openai-compatible"
-import type { OpenAICompatibleChatSettings } from "@ai-sdk/openai-compatible"
-import { NoSuchModelError } from "@ai-sdk/provider"
+import type {
+  EmbeddingModelV2,
+  ImageModelV2,
+  LanguageModelV2,
+} from "@ai-sdk/provider"
 import type { FetchFunction } from "@ai-sdk/provider-utils"
+import { createResponsesFetch } from "./responses"
 
 /**
  * Common LM Studio model IDs that are frequently used.
@@ -42,50 +47,85 @@ export interface LMStudioProviderOptions {
    * Custom fetch function.
    */
   fetch?: FetchFunction
+
+  /**
+   * API to use for requests.
+   * - "chat": Standard OpenAI-compatible /v1/chat/completions API (default)
+   * - "responses": LM Studio's /v1/responses API with reasoning support
+   */
+  api?: "chat" | "responses"
+
+  /**
+   * Reasoning effort for models that support reasoning.
+   * Only applicable when api is "responses".
+   * Values: "low" | "medium" | "high"
+   */
+  reasoningEffort?: "low" | "medium" | "high"
 }
 
 export function createLMStudio(options: LMStudioProviderOptions = {}) {
+  // Validate that reasoningEffort is only used with responses API
+  if (options.reasoningEffort && options.api !== "responses") {
+    console.warn(
+      '[LM Studio] reasoningEffort is only supported with api: "responses". ' +
+        'The option will be ignored unless you set api: "responses".'
+    )
+  }
+
   const baseURL =
     options.baseURL ??
     process.env.LMSTUDIO_API_BASE_URL ??
     "http://localhost:1234/v1"
 
-  const apiKey = options.apiKey ?? "lm-studio"
-
   const getHeaders = () => ({
     ...options.headers,
   })
+
+  // Use responses fetch wrapper if responses API is selected
+  const customFetch: FetchFunction =
+    options.api === "responses"
+      ? createResponsesFetch(options.fetch ?? fetch, {
+          reasoningEffort: options.reasoningEffort,
+        })
+      : (options.fetch ?? fetch)
 
   /**
    * https://github.com/vercel/ai/issues/5197#issuecomment-2722322811
    * Can remove after this issue is resolved.
    * Enabling structured outputs for LM Studio models.
    */
-  const baseOptions = {
+  const baseConfig = {
     provider: "lmstudio",
-    url: ({ path }: { path: string }) => {
-      const url = new URL(`${baseURL}${path}`)
+    url: ({ path }: { path: string; modelId: string }) => {
+      let finalPath = path
+
+      // Only replace path if using responses API
+      if (options.api === "responses") {
+        finalPath = path.replace("/chat/completions", "/responses")
+      }
+
+      const url = new URL(`${baseURL}${finalPath}`)
       return url.toString()
     },
     headers: getHeaders,
-    fetch: options.fetch,
+    fetch: customFetch,
     includeUsage: true,
     supportsStructuredOutputs: true,
-    errorStructure: "openai",
   }
 
-  const createModel = (modelId: LMStudioModelId) =>
-    new OpenAICompatibleChatLanguageModel(modelId, apiKey, baseOptions)
+  const createModel = (modelId: LMStudioModelId): LanguageModelV2 =>
+    new OpenAICompatibleChatLanguageModel(modelId, baseConfig)
 
   const provider = (modelId: LMStudioModelId) => createModel(modelId)
   provider.languageModel = createModel
 
-  provider.textEmbeddingModel = (modelId: LMStudioEmbeddingModelId) =>
-    new OpenAICompatibleEmbeddingModel(modelId, apiKey, baseOptions)
+  provider.textEmbeddingModel = (
+    modelId: LMStudioEmbeddingModelId
+  ): EmbeddingModelV2<string> =>
+    new OpenAICompatibleEmbeddingModel(modelId, baseConfig)
 
-  provider.imageModel = (modelId: string) => {
-    throw new NoSuchModelError({ modelId, modelType: "imageModel" })
-  }
+  provider.imageModel = (modelId: string): ImageModelV2 =>
+    new OpenAICompatibleImageModel(modelId, baseConfig)
 
   return provider
 }
@@ -98,7 +138,7 @@ export function createLMStudio(options: LMStudioProviderOptions = {}) {
 export const lmstudio = (
   model: LMStudioModelId | string,
   options?: LMStudioProviderOptions
-) => createLMStudio(options).languageModel(model)
+): LanguageModelV2 => createLMStudio(options).languageModel(model)
 
 /**
  * Creates an LM Studio embedding model instance.
@@ -108,4 +148,4 @@ export const lmstudio = (
 export const lmstudioEmbedding = (
   model: LMStudioEmbeddingModelId | string,
   options?: LMStudioProviderOptions
-) => createLMStudio(options).textEmbeddingModel(model)
+): EmbeddingModelV2<string> => createLMStudio(options).textEmbeddingModel(model)

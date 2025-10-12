@@ -1,0 +1,24 @@
+{
+  "name": "examples_ai",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "generate-text": "tsx generate-text.ts",
+    "stream-text": "tsx stream-text.ts",
+    "embeddings": "tsx embeddings.ts",
+    "structured-output": "tsx structured-output.ts"
+  },
+  "dependencies": {
+    "@cianfrani/lmstudio": "file:../../",
+    "ai": "^5.0.0",
+    "dotenv": "^17.0.0",
+    "zod": "^3.0.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.0.0"
+  }
+}
