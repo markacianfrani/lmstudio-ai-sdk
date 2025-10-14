@@ -10,6 +10,8 @@ npm install @cianfrani/lmstudio
 
 ## Usage
 
+### Chat API
+
 ```typescript
 import { lmstudio } from '@cianfrani/lmstudio';
 import { generateText } from 'ai';
@@ -17,6 +19,28 @@ import { generateText } from 'ai';
 const { text } = await generateText({
   model: lmstudio('qwen2.5-7b-instruct'),
   prompt: 'Hello, how are you?',
+});
+```
+
+### Responses API (Beta)
+
+The responses API provides access to reasoning traces and structured outputs from models that support reasoning.
+
+#### Installation
+
+```bash
+npm install @cianfrani/lmstudio@responses
+```
+
+#### Usage
+
+```typescript
+import { lmstudio } from '@cianfrani/lmstudio';
+import { generateText } from 'ai';
+
+const { text } = await generateText({
+  model: lmstudio('gpt-oss', { api: 'responses', reasoningEffort: 'medium' }),
+  prompt: 'Solve this complex problem...',
 });
 ```
 
@@ -32,6 +56,8 @@ Creates an LM Studio provider instance.
 - `apiKey?: string` - API key for authentication. LM Studio typically doesn't require this.
 - `headers?: Record<string, string>` - Custom headers to include in requests.
 - `fetch?: FetchFunction` - Custom fetch function.
+- `api?: 'chat' | 'responses'` - API to use. Defaults to `'chat'`. (Responses API requires beta version)
+- `reasoningEffort?: 'low' | 'medium' | 'high'` - Reasoning effort for responses API.
 
 ### lmstudio
 
