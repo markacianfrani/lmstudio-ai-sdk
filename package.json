@@ -1,13 +1,11 @@
 {
   "name": "@cianfrani/lmstudio",
   "version": "0.0.7",
-  "description": "LM Studio provider for the AI SDK",
+  "description": "LM Studio provider for the AI SDK (Responses API)",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
-  "files": [
-    "dist"
-  ],
+  "files": ["dist"],
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
@@ -26,7 +24,9 @@
     "lm-studio",
     "llm",
     "chat",
-    "embeddings"
+    "embeddings",
+    "responses",
+    "reasoning"
   ],
   "author": "Mark Anthony Cianfrani",
   "license": "MIT",
