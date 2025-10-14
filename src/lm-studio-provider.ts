@@ -50,8 +50,6 @@ export function createLMStudio(options: LMStudioProviderOptions = {}) {
     process.env.LMSTUDIO_API_BASE_URL ??
     "http://localhost:1234/v1"
 
-  const apiKey = options.apiKey ?? "lm-studio"
-
   const getHeaders = () => ({
     ...options.headers,
   })
