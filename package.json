@@ -1,6 +1,6 @@
 {
   "name": "@cianfrani/lmstudio",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "LM Studio provider for the AI SDK (Responses API)",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
