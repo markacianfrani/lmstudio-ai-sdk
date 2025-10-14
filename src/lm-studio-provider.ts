@@ -2,7 +2,7 @@ import {
   OpenAICompatibleChatLanguageModel,
   OpenAICompatibleEmbeddingModel,
 } from "@ai-sdk/openai-compatible"
-import type { OpenAICompatibleChatSettings } from "@ai-sdk/openai-compatible"
+
 import { NoSuchModelError } from "@ai-sdk/provider"
 import type { FetchFunction } from "@ai-sdk/provider-utils"
 
@@ -71,17 +71,16 @@ export function createLMStudio(options: LMStudioProviderOptions = {}) {
     fetch: options.fetch,
     includeUsage: true,
     supportsStructuredOutputs: true,
-    errorStructure: "openai",
   }
 
   const createModel = (modelId: LMStudioModelId) =>
-    new OpenAICompatibleChatLanguageModel(modelId, apiKey, baseOptions)
+    new OpenAICompatibleChatLanguageModel(modelId, baseOptions)
 
   const provider = (modelId: LMStudioModelId) => createModel(modelId)
   provider.languageModel = createModel
 
   provider.textEmbeddingModel = (modelId: LMStudioEmbeddingModelId) =>
-    new OpenAICompatibleEmbeddingModel(modelId, apiKey, baseOptions)
+    new OpenAICompatibleEmbeddingModel(modelId, baseOptions)
 
   provider.imageModel = (modelId: string) => {
     throw new NoSuchModelError({ modelId, modelType: "imageModel" })
