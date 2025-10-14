@@ -1,13 +1,8 @@
 import {
   OpenAICompatibleChatLanguageModel,
   OpenAICompatibleEmbeddingModel,
-  OpenAICompatibleImageModel,
 } from "@ai-sdk/openai-compatible"
-import type {
-  EmbeddingModelV2,
-  ImageModelV2,
-  LanguageModelV2,
-} from "@ai-sdk/provider"
+import type { EmbeddingModelV1, LanguageModelV1 } from "@ai-sdk/provider"
 import type { FetchFunction } from "@ai-sdk/provider-utils"
 import { createResponsesFetch } from "./responses"
 import { ensureToolParametersType } from "./responses/tools-utils"
@@ -129,19 +124,19 @@ export function createLMStudio(options: LMStudioProviderOptions = {}) {
     supportsStructuredOutputs: true,
   }
 
-  const createModel = (modelId: LMStudioModelId): LanguageModelV2 =>
-    new OpenAICompatibleChatLanguageModel(modelId, baseConfig)
+  const createModel = (modelId: LMStudioModelId): LanguageModelV1 =>
+    new OpenAICompatibleChatLanguageModel(modelId, {}, baseConfig)
 
   const provider = (modelId: LMStudioModelId) => createModel(modelId)
   provider.languageModel = createModel
 
   provider.textEmbeddingModel = (
     modelId: LMStudioEmbeddingModelId
-  ): EmbeddingModelV2<string> =>
-    new OpenAICompatibleEmbeddingModel(modelId, baseConfig)
+  ): EmbeddingModelV1<string> =>
+    new OpenAICompatibleEmbeddingModel(modelId, {}, baseConfig)
 
-  provider.imageModel = (modelId: string): ImageModelV2 =>
-    new OpenAICompatibleImageModel(modelId, baseConfig)
+  provider.imageModel = (modelId: string) =>
+    new OpenAICompatibleChatLanguageModel(modelId, {}, baseConfig)
 
   return provider
 }
@@ -154,7 +149,7 @@ export function createLMStudio(options: LMStudioProviderOptions = {}) {
 export const lmstudio = (
   model: LMStudioModelId | string,
   options?: LMStudioProviderOptions
-): LanguageModelV2 => createLMStudio(options).languageModel(model)
+): LanguageModelV1 => createLMStudio(options).languageModel(model)
 
 /**
  * Creates an LM Studio embedding model instance.
@@ -164,4 +159,4 @@ export const lmstudio = (
 export const lmstudioEmbedding = (
   model: LMStudioEmbeddingModelId | string,
   options?: LMStudioProviderOptions
-): EmbeddingModelV2<string> => createLMStudio(options).textEmbeddingModel(model)
+): EmbeddingModelV1<string> => createLMStudio(options).textEmbeddingModel(model)
