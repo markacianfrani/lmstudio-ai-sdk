@@ -10,6 +10,7 @@ import type {
 } from "@ai-sdk/provider"
 import type { FetchFunction } from "@ai-sdk/provider-utils"
 import { createResponsesFetch } from "./responses"
+import { ensureToolParametersType } from "./responses/tools-utils"
 
 /**
  * Common LM Studio model IDs that are frequently used.
@@ -81,13 +82,28 @@ export function createLMStudio(options: LMStudioProviderOptions = {}) {
     ...options.headers,
   })
 
-  // Use responses fetch wrapper if responses API is selected
+  const baseFetch = options.fetch ?? fetch
+  const withToolsFix: FetchFunction = async (url, init) => {
+    if (init?.body) {
+      try {
+        const body = JSON.parse(init.body as string)
+        if (body.tools && Array.isArray(body.tools)) {
+          body.tools = ensureToolParametersType(body.tools)
+          init.body = JSON.stringify(body)
+        }
+      } catch {
+        // Body isn't JSON, pass through
+      }
+    }
+    return baseFetch(url, init)
+  }
+
   const customFetch: FetchFunction =
     options.api === "responses"
-      ? createResponsesFetch(options.fetch ?? fetch, {
+      ? createResponsesFetch(withToolsFix, {
           reasoningEffort: options.reasoningEffort,
         })
-      : (options.fetch ?? fetch)
+      : withToolsFix
 
   /**
    * https://github.com/vercel/ai/issues/5197#issuecomment-2722322811

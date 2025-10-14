@@ -23,11 +23,15 @@ export interface ResponsesAPIContent {
  */
 export interface ResponsesAPIOutput {
   id: string
-  type: "message" | "reasoning"
+  type: "message" | "reasoning" | "function_call"
   role?: string
   status?: string
   content?: ResponsesAPIContent[]
   summary?: unknown[]
+  // Function call fields
+  call_id?: string
+  name?: string
+  arguments?: string
 }
 
 /**
@@ -56,8 +60,16 @@ export interface ResponsesAPIResponseBody {
  */
 export interface ChatMessage {
   role: string
-  content: string
+  content: string | null
   reasoning?: string
+  tool_calls?: Array<{
+    id: string
+    type: "function"
+    function: {
+      name: string
+      arguments: string
+    }
+  }>
 }
 
 /**

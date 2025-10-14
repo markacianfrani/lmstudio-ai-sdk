@@ -312,7 +312,7 @@ export function createResponsesFetch(
       }
 
       const responseData = (await response.json()) as ResponsesAPIResponseBody
-      debug("Response usage:", responseData.usage)
+      debug("Raw responses API response:", responseData)
 
       const transformed = transformResponseFromResponses(responseData)
 

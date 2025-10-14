@@ -1,3 +1,4 @@
+import { ensureToolParametersType } from "./tools-utils"
 import type {
   ChatCompletionsRequestBody,
   ChatMessage,
@@ -38,10 +39,40 @@ export function transformRequestForResponses(
       key !== "messages" &&
       key !== "user" &&
       key !== "reasoning_effort" &&
-      key !== "model"
+      key !== "model" &&
+      key !== "tools"
     ) {
       transformed[key] = body[key]
     }
+  }
+
+  // Flatten nested tools structure for responses API and ensure type: "object"
+  if (body.tools && Array.isArray(body.tools)) {
+    transformed.tools = ensureToolParametersType(body.tools).map(
+      (tool: unknown) => {
+        if (
+          tool &&
+          typeof tool === "object" &&
+          "type" in tool &&
+          tool.type === "function" &&
+          "function" in tool &&
+          tool.function &&
+          typeof tool.function === "object"
+        ) {
+          return {
+            type: "function",
+            name: "name" in tool.function ? tool.function.name : undefined,
+            description:
+              "description" in tool.function
+                ? tool.function.description
+                : undefined,
+            parameters:
+              "parameters" in tool.function ? tool.function.parameters : {},
+          }
+        }
+        return tool
+      }
+    )
   }
 
   return transformed
@@ -54,44 +85,80 @@ export function transformRequestForResponses(
 export function transformResponseFromResponses(
   responseData: ResponsesAPIResponseBody
 ) {
-  // Extract reasoning and message outputs separately
   const reasoningOutput = responseData.output.find(
     (o) => o.type === "reasoning"
   )
   const messageOutputs = responseData.output.filter((o) => o.type === "message")
+  const functionCalls = responseData.output.filter(
+    (o) => o.type === "function_call"
+  )
 
   const reasoningText = reasoningOutput?.content?.find(
     (c) => c.type === "reasoning_text"
   )?.text
+
+  // Handle function calls - convert to tool_calls format
+  const toolCalls =
+    functionCalls.length > 0
+      ? functionCalls.map((fc) => ({
+          id: fc.call_id || fc.id,
+          type: "function" as const,
+          function: {
+            name: fc.name || "",
+            arguments: fc.arguments || "{}",
+          },
+        }))
+      : undefined
+
+  // If no message outputs yet, return choice with tool calls or empty
+  const choices =
+    messageOutputs.length === 0
+      ? [
+          {
+            index: 0,
+            message: {
+              role: "assistant" as const,
+              content: toolCalls ? null : "",
+              ...(toolCalls && { tool_calls: toolCalls }),
+            },
+            finish_reason:
+              functionCalls.length > 0 ? ("tool_calls" as const) : null,
+          },
+        ]
+      : messageOutputs.map((output, index) => {
+          const outputText =
+            output.content?.find((c) => c.type === "output_text")?.text ?? ""
+
+          const message: ChatMessage = {
+            role: output.role ?? "assistant",
+            content: outputText,
+          }
+
+          if (reasoningText) {
+            message.reasoning = reasoningText
+          }
+
+          if (toolCalls) {
+            message.tool_calls = toolCalls
+            message.content = null
+          }
+
+          return {
+            index,
+            message,
+            finish_reason:
+              output.status === "completed"
+                ? ("stop" as const)
+                : ("length" as const),
+          }
+        })
 
   return {
     id: responseData.id,
     object: "chat.completion" as const,
     created: responseData.created_at,
     model: responseData.model,
-    choices: messageOutputs.map((output, index) => {
-      const outputText =
-        output.content?.find((c) => c.type === "output_text")?.text ?? ""
-
-      const message: ChatMessage = {
-        role: output.role ?? "assistant",
-        content: outputText,
-      }
-
-      // Include reasoning if present
-      if (reasoningText) {
-        message.reasoning = reasoningText
-      }
-
-      return {
-        index,
-        message,
-        finish_reason:
-          output.status === "completed"
-            ? ("stop" as const)
-            : ("length" as const),
-      }
-    }),
+    choices,
     usage: responseData.usage ?? {},
   }
 }
