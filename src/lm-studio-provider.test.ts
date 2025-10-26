@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest"
+import { NoSuchModelError } from "@ai-sdk/provider"
 import { createLMStudio } from "./lm-studio-provider"
 
 describe("createLMStudio", () => {
@@ -15,7 +16,7 @@ describe("createLMStudio", () => {
     const provider = createLMStudio()
     const model = provider("qwen2.5-7b-instruct")
     expect(model).toBeDefined()
-    expect(model.provider).toBe("lmstudio.chat")
+    expect(model.provider).toBe("lmstudio")
     expect(model.modelId).toBe("qwen2.5-7b-instruct")
   })
 
@@ -25,15 +26,12 @@ describe("createLMStudio", () => {
       "text-embedding-nomic-embed-text-v1.5"
     )
     expect(model).toBeDefined()
-    expect(model.provider).toBe("lmstudio.embedding")
+    expect(model.provider).toBe("lmstudio")
     expect(model.modelId).toBe("text-embedding-nomic-embed-text-v1.5")
   })
 
-  it("should create an image model", () => {
+  it("should throw for image model", () => {
     const provider = createLMStudio()
-    const model = provider.imageModel("some-model")
-    expect(model).toBeDefined()
-    expect(model.provider).toBe("lmstudio.image")
-    expect(model.modelId).toBe("some-model")
+    expect(() => provider.imageModel("some-model")).toThrow(NoSuchModelError)
   })
 })

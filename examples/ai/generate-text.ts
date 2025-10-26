@@ -1,6 +1,5 @@
 import { lmstudio } from "@cianfrani/lmstudio"
 import { generateText } from "ai"
-import "dotenv/config"
 
 async function main() {
   const prompt = "What is the square root of 144?"

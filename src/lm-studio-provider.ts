@@ -1,7 +1,18 @@
-import { createOpenAICompatible } from "@ai-sdk/openai-compatible"
-
-import { NoSuchModelError } from "@ai-sdk/provider"
-import type { FetchFunction } from "@ai-sdk/provider-utils"
+import {
+  OpenAICompatibleChatLanguageModel,
+  OpenAICompatibleEmbeddingModel,
+} from "@ai-sdk/openai-compatible"
+import type { OpenAICompatibleChatConfig } from "@ai-sdk/openai-compatible/internal"
+import {
+  type EmbeddingModelV2,
+  type LanguageModelV2,
+  NoSuchModelError,
+  type ProviderV2,
+} from "@ai-sdk/provider"
+import {
+  type FetchFunction,
+  withoutTrailingSlash,
+} from "@ai-sdk/provider-utils"
 
 /**
  * Common LM Studio model IDs that are frequently used.
@@ -16,6 +27,16 @@ export type LMStudioEmbeddingModelId =
   | "text-embedding-nomic-embed-text-v1.5"
   | "all-MiniLM-L6-v2"
   | (string & {})
+
+export interface LMStudioProvider extends ProviderV2 {
+  (modelId: LMStudioModelId): LanguageModelV2
+
+  languageModel(modelId: LMStudioModelId): LanguageModelV2
+
+  textEmbeddingModel(
+    modelId: LMStudioEmbeddingModelId
+  ): EmbeddingModelV2<string>
+}
 
 export interface LMStudioProviderOptions {
   /**
@@ -42,33 +63,42 @@ export interface LMStudioProviderOptions {
 }
 
 export function createLMStudio(options: LMStudioProviderOptions = {}) {
-  const baseURL =
+  const baseURL = withoutTrailingSlash(
     options.baseURL ??
-    process.env.LMSTUDIO_API_BASE_URL ??
-    "http://localhost:1234/v1"
+      process.env.LMSTUDIO_BASE_URL ??
+      "http://localhost:1234/v1"
+  )
+
+  const getHeaders = () => ({
+    ...options.headers,
+  })
 
   const baseOptions = {
-    name: "lmstudio",
-    baseURL: baseURL,
-    apiKey: options.apiKey ?? "lm-studio",
-    headers: options.headers ?? {},
+    provider: "lmstudio",
+    url: ({ path }) => `${baseURL}${path}`,
+    headers: getHeaders,
     fetch: options.fetch,
+    includeUsage: true,
+    supportsStructuredOutputs: true,
+  } satisfies OpenAICompatibleChatConfig
+
+  const createModel = (modelId: LMStudioModelId) =>
+    new OpenAICompatibleChatLanguageModel(modelId, baseOptions)
+
+  const provider = (modelId: LMStudioModelId) => createModel(modelId)
+  provider.languageModel = createModel
+
+  provider.textEmbeddingModel = (modelId: LMStudioEmbeddingModelId) =>
+    new OpenAICompatibleEmbeddingModel(modelId, baseOptions)
+
+  provider.imageModel = (modelId: string) => {
+    throw new NoSuchModelError({ modelId, modelType: "imageModel" })
   }
 
-  return createOpenAICompatible(baseOptions)
+  return provider
 }
 
 /**
  * Default LM Studio provider instance.
  */
 export const lmstudio = createLMStudio()
-
-/**
- * Creates an LM Studio embedding model instance.
- * @param model The embedding model ID to use
- * @param options Optional configuration for the provider
- */
-export const lmstudioEmbedding = (
-  model: LMStudioEmbeddingModelId | string,
-  options?: LMStudioProviderOptions
-) => createLMStudio(options).textEmbeddingModel(model)
