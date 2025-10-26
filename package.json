@@ -1,6 +1,6 @@
 {
   "name": "@cianfrani/lmstudio",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "LM Studio provider for the AI SDK",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
@@ -26,9 +26,9 @@
     "url": "https://github.com/markacianfrani/lmstudio-ai-sdk"
   },
   "dependencies": {
-    "@ai-sdk/openai-compatible": "^0.0.7",
-    "@ai-sdk/provider": "^1.0.2",
-    "@ai-sdk/provider-utils": "^2.0.4"
+    "@ai-sdk/openai-compatible": "^1.0.0",
+    "@ai-sdk/provider": "^2.0.0",
+    "@ai-sdk/provider-utils": "^3.0.0"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.8.0",

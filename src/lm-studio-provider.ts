@@ -1,7 +1,4 @@
-import {
-  OpenAICompatibleChatLanguageModel,
-  OpenAICompatibleEmbeddingModel,
-} from "@ai-sdk/openai-compatible"
+import { createOpenAICompatible } from "@ai-sdk/openai-compatible"
 
 import { NoSuchModelError } from "@ai-sdk/provider"
 import type { FetchFunction } from "@ai-sdk/provider-utils"
@@ -50,52 +47,21 @@ export function createLMStudio(options: LMStudioProviderOptions = {}) {
     process.env.LMSTUDIO_API_BASE_URL ??
     "http://localhost:1234/v1"
 
-  const getHeaders = () => ({
-    ...options.headers,
-  })
-
-  /**
-   * https://github.com/vercel/ai/issues/5197#issuecomment-2722322811
-   * Can remove after this issue is resolved.
-   * Enabling structured outputs for LM Studio models.
-   */
   const baseOptions = {
-    provider: "lmstudio",
-    url: ({ path }: { path: string }) => {
-      const url = new URL(`${baseURL}${path}`)
-      return url.toString()
-    },
-    headers: getHeaders,
+    name: "lmstudio",
+    baseURL: baseURL,
+    apiKey: options.apiKey ?? "lm-studio",
+    headers: options.headers ?? {},
     fetch: options.fetch,
-    includeUsage: true,
-    supportsStructuredOutputs: true,
   }
 
-  const createModel = (modelId: LMStudioModelId) =>
-    new OpenAICompatibleChatLanguageModel(modelId, baseOptions)
-
-  const provider = (modelId: LMStudioModelId) => createModel(modelId)
-  provider.languageModel = createModel
-
-  provider.textEmbeddingModel = (modelId: LMStudioEmbeddingModelId) =>
-    new OpenAICompatibleEmbeddingModel(modelId, baseOptions)
-
-  provider.imageModel = (modelId: string) => {
-    throw new NoSuchModelError({ modelId, modelType: "imageModel" })
-  }
-
-  return provider
+  return createOpenAICompatible(baseOptions)
 }
 
 /**
- * Creates an LM Studio language model instance.
- * @param model The model ID to use (e.g., "qwen2.5-7b-instruct")
- * @param options Optional configuration for the provider
+ * Default LM Studio provider instance.
  */
-export const lmstudio = (
-  model: LMStudioModelId | string,
-  options?: LMStudioProviderOptions
-) => createLMStudio(options).languageModel(model)
+export const lmstudio = createLMStudio()
 
 /**
  * Creates an LM Studio embedding model instance.
